@@ -21,8 +21,8 @@ This project is a Python-based command-line tool for converting Markdown files i
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/your-username/your-repository.git
-    cd your-repository
+    git clone https://github.com/yukun-impa/Md2Tex.git
+    cd Md2Tex
     ```
 2.  Create and activate the conda environment:
     ```bash
