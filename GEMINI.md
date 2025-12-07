@@ -16,7 +16,14 @@ The project is structured into several modules:
 
 ### 1. Installation
 
-First, install the necessary Python dependencies from `requirements.txt`:
+First, create and activate the conda environment:
+
+```bash
+conda create -n md2tex python=3.9 -y
+conda activate md2tex
+```
+
+Then, install the necessary Python dependencies from `requirements.txt`:
 
 ```bash
 pip install -r requirements.txt

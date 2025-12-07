@@ -24,7 +24,12 @@ This project is a Python-based command-line tool for converting Markdown files i
     git clone https://github.com/your-username/your-repository.git
     cd your-repository
     ```
-2.  Install the dependencies:
+2.  Create and activate the conda environment:
+    ```bash
+    conda create -n md2tex python=3.9 -y
+    conda activate md2tex
+    ```
+3.  Install the dependencies:
     ```bash
     pip install -r requirements.txt
     ```
