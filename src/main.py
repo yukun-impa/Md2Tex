@@ -31,6 +31,9 @@ def main():
         metadata, content = parse_markdown(input_file)
         if metadata and not root_metadata:
             root_metadata = metadata
+        
+        if "template" in metadata:
+            converter = Converter(output_dir=args.output_dir, template_path=metadata["template"])
 
         # 2. Convert content
         base_name = os.path.splitext(os.path.basename(input_file))[0]

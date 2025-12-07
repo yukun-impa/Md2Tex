@@ -54,6 +54,17 @@ You can also provide a custom template for the main `.tex` file using the `--tem
 PYTHONPATH=. python src/main.py file1.md file2.md --template path/to/your/template.tex
 ```
 
+Alternatively, you can specify the template in the YAML frontmatter of your Markdown file. This will override the `--template` argument.
+
+```yaml
+---
+title: My Document
+author: John Doe
+template: path/to/your/template.tex
+---
+```
+
+
 
 
 ### 4. Compiling the LaTeX
