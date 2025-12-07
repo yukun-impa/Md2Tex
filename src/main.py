@@ -1,3 +1,4 @@
+import re
 import argparse
 import os
 import sys
@@ -7,6 +8,25 @@ from src.converter import Converter
 
 # Load environment variables from .env file
 load_dotenv()
+
+def _sort_files_by_numeric_prefix(filepaths):
+    """
+    Sorts a list of file paths based on numerical prefixes in their filenames.
+    Files without a numerical prefix are sorted alphabetically after the numbered files.
+    Examples:
+    - 01_intro.md
+    - 02_chapter.md
+    - chapter_a.md (comes after numbered files)
+    """
+    def get_sort_key(filepath):
+        basename = os.path.basename(filepath)
+        match = re.match(r'^(\d+)[_.-]', basename)
+        if match:
+            return (0, int(match.group(1)), basename) # (priority for numbered, number, original name)
+        else:
+            return (1, 0, basename) # (priority for unnumbered, 0 as placeholder, original name)
+    
+    return sorted(filepaths, key=get_sort_key)
 
 def main():
     parser = argparse.ArgumentParser(description="Convert one or more Markdown files to a single LaTeX document.")
@@ -19,6 +39,9 @@ def main():
     root_metadata = {}
 
     converter = Converter(output_dir=args.output_dir, template_path=args.template)
+
+    # Sort input files based on numerical prefix
+    args.input_files = _sort_files_by_numeric_prefix(args.input_files)
 
     for input_file in args.input_files:
         if not os.path.isfile(input_file):
