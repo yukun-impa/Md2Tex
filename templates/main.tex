@@ -12,11 +12,20 @@
 \usepackage{xcolor}
 \definecolor{primary}{HTML}{2E86C1} % A nice blue
 \definecolor{secondary}{HTML}{5D6D7E}
+\usepackage{titling}
 
-\usepackage{titlesec}
-\titleformat{\section}{\Large\bfseries\color{primary}}}{\thesection}{1em}{}
-\titleformat{\subsection}{\large\bfseries\color{secondary}}}{\thesubsection}{1em}{}
-\titleformat{\subsubsection}{\bfseries}{\thesubsubsection}{1em}{}
+
+\titleformat{\paragraph}[runin]
+  {\normalfont\normalsize\bfseries}
+  {\theparagraph}
+  {1em}
+  {}
+  
+\titlespacing*{\paragraph}
+  {0pt}
+  {3.25ex plus 1ex minus .2ex}
+  {1em}
+
 
 \usepackage{graphicx}
 \usepackage{hyperref}

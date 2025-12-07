@@ -1,4 +1,5 @@
 import os
+import re
 from src.llm_client import LLMClient
 
 class Converter:
@@ -18,7 +19,8 @@ class Converter:
         structure_map = metadata.get('structure_map', {
             '#': 'section',
             '##': 'subsection',
-            '###': 'subsubsection'
+            '###': 'subsubsection',
+            '####': 'paragraph*'
         })
 
         # 2. Build the System Prompt
@@ -30,12 +32,14 @@ class Converter:
             "*   `graphicx` for images (`\\includegraphics{}`).\n"
             "*   `amsmath`, `amsfonts`, `amssymb` for mathematical typesetting.\n\n"
             "**Conversion Rules & Guidelines:**\n\n"
-            "1.  **Document Structure:**\n"
-            "    *   Analyze the Markdown heading hierarchy (`#`, `##`, `###`, etc.) to infer the document structure.\n"
-            "    *   **Strictly adhere to the following mapping for Markdown headings to LaTeX sectioning commands:**\n"
+            "1.  **Document Structure & Numbering:**\n"
+            "    *   Analyze the Markdown heading hierarchy (`#`, `##`, `###`) to infer the structure.\n"
+            "    *   **Strictly adhere to the following mapping:**\n"
             "        " + str(structure_map) + "\n"
-            "    *   Use appropriate LaTeX sectioning commands (`\\section`, `\\subsection`, `\\subsubsection`, `\\paragraph`).\n"
-            "    *   If the structure is inconsistent (e.g., a `###` follows a `#`), make a logical choice to create a clean LaTeX structure. Do not blindly follow the Markdown.\n"
+            "    *   **CRITICAL: Avoid Double Numbering.** LaTeX automatically numbers sections. If the Markdown header text starts with a number, label, or index (e.g., '1. Introduction', '2.3 Methodology', 'Part 1: Abstract'), **you must remove the leading number/label** from the title text inside the LaTeX command.\n"
+            "    *   **CRITICAL RULE:** If a list item content starts with a square bracket `[` (e.g., `* [Draft]`), you MUST output it as `\\item {[Draft]...}` or `\\item {[}Draft]...`. If you output `\\item [Draft]`, LaTeX will treat it as a label, not text.\n" 
+            "        *   *Bad:* `## 2. Methods` -> `\\subsection{2. Methods}` (Result: 2. 2. Methods)\n"
+            "        *   *Good:* `## 2. Methods` -> `\\subsection{Methods}` (Result: 2. Methods)\n"
             "    *   The output should ONLY be the body content. Do NOT include `\\documentclass`, `\\begin{document}`, or `\\end{document}`.\n\n"
             "2.  **Text Formatting:**\n"
             "    *   Convert `**bold**` and `__bold__` to `\\textbf{bold}`.\n"
@@ -43,28 +47,25 @@ class Converter:
             "    *   Convert `~~strikethrough~~` to `\\sout{strikethrough}`.\n"
             "    *   Convert inline `code` to `\\texttt{code}`.\n\n"
             "3.  **Math:**\n"
-            "    *   Convert inline math (e.g., `$E=mc^2$`) to `$...$` (e.g., `\\$E=mc^2\\$`).\n"
-            "    *   Convert display math (e.g., `$$a^2 + b^2 = c^2$$` or `\\$\\$a^2 + b^2 = c^2\\$\\$`) to `\\[ ... \\]` environment.\n\n"
+            "    *   Convert inline math (e.g., `$E=mc^2$`) to `$...$`.\n"
+            "    *   Convert display math to `\\[ ... \\]` environment.\n\n"
             "4.  **Lists:**\n"
-            "    *   Convert unordered lists (`*`, `-`, `+`) to `itemize` environments.\n"
-            "    *   Convert ordered lists (`1.`, `2.`) to `enumerate` environments.\n"
-            "    *   Handle nested lists correctly.\n\n"
+            "    *   Convert `*`, `-` to `itemize`.\n"
+            "    *   Convert `1.` to `enumerate`.\n"
+            "    *   **CRITICAL: Use correct LaTeX environment closing syntax.** For example, always use `\\end{itemize}` and `\\end{enumerate}`, avoiding `\\end{{itemize}` or `\\end{{enumerate}` typos.\n\n"
             "5.  **Code Blocks:**\n"
-            "    *   For fenced code blocks (e.g., ```python ... ```), use the `verbatim` environment. If a language is specified, you can optionally use the `minted` package syntax if you think it's appropriate, but `verbatim` is a safe default. Assume `minted` is loaded if you use it.\n\n"
+            "    *   Use `verbatim` environment for code blocks.\n\n"
             "6.  **Links & Images:**\n"
-            "    *   Convert `[link text](url)` to `\\href{url}{link text}`.\n"
-            "    *   Convert `![alt text](image_path)` to a `figure` environment with `\\includegraphics{image_path}` and `\\caption{alt text}`. **Crucially, the `image_path` must be preserved exactly as provided in the Markdown.**\n\n"
+            "    *   Convert `[text](url)` to `\\href{url}{text}`.\n"
+            "    *   Convert `![alt](path)` to `figure` with `\\includegraphics{path}` and `\\caption{alt}`. Preserve `path` exactly.\n\n"
             "7.  **Tables:**\n"
-            "    *   Convert Markdown tables into LaTeX `tabular` environments within a `table` float if appropriate. Pay attention to column alignment (left, center, right) as indicated by Markdown syntax (e.g., `|:---|:---:|---:|`). Use `\\raggedright`, `\\centering`, `\\raggedleft` within `p{}` columns if needed, or simply `l`, `c`, `r` for fixed alignment.\n\n"
-            "8.  **Blockquotes:**\n"
-            "    *   Convert Markdown blockquotes (`> `) to the `quote` environment.\n\n"
-            "9.  **Horizontal Rules:**\n"
-            "    *   Convert Markdown horizontal rules (`---`, `***`, `___`) to `\\\\hrulefill`.\n\n"
-            "10. **Robustness & HTML:**\n"
-            "    *   The input might be poorly formatted. Do your best to interpret the user's intent and produce clean LaTeX.\n"
-            "    *   Handle simple HTML tags: `<b>` to `\\textbf{}`, `<i>` to `\\textit{}`, `<u>` to `\\underline{}`. Other complex HTML should be ignored or converted to a reasonable LaTeX equivalent if possible.\n\n"
-            "**Final Output Instruction:**\n"
-            "Your response must ONLY contain the LaTeX code snippet, without any additional conversational text, explanations, or Markdown fences (e.g., ```latex). Do not wrap the LaTeX in any other characters or formatting."
+            "    *   Convert to `tabular` inside `table` float if appropriate. Respect alignment.\n\n"
+            "8.  **Blockquotes & Rules:**\n"
+            "    *   `> ` to `quote` environment.\n"
+            "    *   `---` to `\\hrulefill`.\n\n"
+            "9.  **Robustness:**\n"
+            "    *   Handle poor formatting gracefully. Interpret user intent.\n"
+            "    *   ONLY return the LaTeX code. No Markdown fences.\n"
         )
 
         # 3. Add extra user instructions if present
@@ -82,6 +83,10 @@ class Converter:
             tex_content = tex_content[8:].lstrip()
         if tex_content.endswith("```"):
             tex_content = tex_content[:-3].rstrip()
+        
+        # Fix common LLM typo: \end{{itemize} -> \end{itemize}
+        tex_content = re.sub(r'\\end\{\{itemize\}', r'\\end{itemize}', tex_content)
+        tex_content = re.sub(r'\\end\{\{enumerate\}', r'\\end{enumerate}', tex_content)
 
         # 6. Write Output
         output_path = os.path.join(self.output_dir, filename)
@@ -103,8 +108,20 @@ class Converter:
             with open(template_path, 'r') as f:
                 template = f.read()
         except FileNotFoundError:
-            print(f"Error: Template file not found at {template_path}")
-            return None
+            # Fallback template if file is missing
+            template = (
+                "\\documentclass{article}\n"
+                "\\usepackage{graphicx}\n"
+                "\\usepackage{hyperref}\n"
+                "\\usepackage{soul}\n"
+                "\\usepackage{amsmath}\n"
+                "\\title{((TITLE))}\n"
+                "\\author{((AUTHOR))}\n"
+                "\\begin{document}\n"
+                "\\maketitle\n"
+                "((CONTENT_FILES))\n"
+                "\\end{document}"
+            )
 
         # Replace placeholders
         title = metadata.get('title', 'Untitled Document')
@@ -113,7 +130,10 @@ class Converter:
         # Generate the \input commands for each content file
         input_commands = ""
         for filename in content_filenames:
-            input_commands += f"\\input{{{filename}}}\n"
+            # Ensure we only input the filename, not the full path if it's in the same dir
+            # But usually input uses relative paths. Assuming flat structure here.
+            fname_only = os.path.basename(filename) 
+            input_commands += f"\\input{{{fname_only}}}\n"
 
         final_tex = template.replace('((TITLE))', title)
         final_tex = final_tex.replace('((AUTHOR))', author)

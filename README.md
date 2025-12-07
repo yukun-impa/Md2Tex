@@ -26,7 +26,7 @@ This project is a Python-based command-line tool for converting Markdown files i
     ```
 2.  Create and activate the conda environment:
     ```bash
-    conda create -n md2tex python=3.9 -y
+    conda create -n md2tex python=3.12 -y
     conda activate md2tex
     ```
 3.  Install the dependencies:
@@ -48,21 +48,16 @@ This project uses the Gemini API by default, which requires an API key.
 
 To convert one or more Markdown files, run the `main.py` script with the paths to your input files.
 
-**Note for local development:** When running the script locally, you may need to set the `PYTHONPATH` to the root of the project.
 ```bash
-PYTHONPATH=. python src/main.py path/to/your/file1.md path/to/your/file2.md
+python main.py path/to/your/file1.md path/to/your/file2.md
 ```
 
 You can specify an output directory using the `--output_dir` flag. By default, the output is saved in the `output/` directory.
 
-```bash
-PYTHONPATH=. python src/main.py file1.md file2.md --output_dir my_latex_files
-```
-
 You can also provide a custom template for the main `.tex` file using the `--template` flag.
 
 ```bash
-PYTHONPATH=. python src/main.py file1.md file2.md --template path/to/your/template.tex
+python main.py file1.md file2.md --template path/to/your/template.tex
 ```
 
 Alternatively, you can specify the template in the YAML frontmatter of your Markdown file. This will override the `--template` argument.
@@ -80,6 +75,32 @@ After running the conversion, the output directory will contain the generated `.
 ```bash
 pdflatex -output-directory=output output/main.tex
 ```
+
+## YAML Frontmatter Support
+
+You can include YAML frontmatter at the beginning of your Markdown files to provide metadata for your LaTeX document. This metadata can be used by the LaTeX templates for fields like title, author, date, and even to specify a custom template for that specific Markdown file.
+
+**Structure:**
+
+The frontmatter must be at the very top of the file, enclosed by triple-dashed lines (`---`).
+
+```yaml
+---
+title: Your Document Title
+author: Your Name
+date: "December 7, 2025" # Optional: Override the default date
+template: path/to/your/custom_template.tex # Optional: Custom template for this file
+document_class: article # Example of custom LaTeX options
+---
+```
+
+**Supported Fields:**
+
+*   `title`: The title of your document.
+*   `author`: The author(s) of the document.
+*   `date`: The publication date. If not provided, the current date might be used by the LaTeX template.
+*   `template`: (Optional) Path to a specific LaTeX template file to use for this Markdown document. This overrides the `--template` command-line argument.
+*   Any other custom fields you define can be accessed within your LaTeX templates.
 
 ## Development
 
