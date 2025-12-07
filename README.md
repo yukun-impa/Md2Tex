@@ -7,6 +7,7 @@ This project is a Python-based command-line tool for converting Markdown files i
 *   **Markdown to LaTeX Conversion**: Converts Markdown files to `.tex` files.
 *   **LLM-Powered**: Uses a Large Language Model for smart conversion (with a mock mode for offline use).
 *   **YAML Frontmatter Support**: Parses YAML frontmatter for metadata like title and author.
+*   **Customizable LaTeX Templates**: Allows you to use your own LaTeX templates for the main document.
 *   **LaTeX Template**: Generates a main `.tex` file that includes the converted content.
 
 ## Getting Started
@@ -51,6 +52,12 @@ You can specify an output directory using the `--output_dir` flag. By default, t
 
 ```bash
 PYTHONPATH=. python src/main.py file1.md file2.md --output_dir my_latex_files
+```
+
+You can also provide a custom template for the main `.tex` file using the `--template` flag.
+
+```bash
+PYTHONPATH=. python src/main.py file1.md file2.md --template path/to/your/template.tex
 ```
 
 After running the conversion, the output directory will contain the generated `.tex` files. To compile them into a PDF, you can use a LaTeX compiler like `pdflatex`:

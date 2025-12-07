@@ -12,12 +12,13 @@ def main():
     parser = argparse.ArgumentParser(description="Convert one or more Markdown files to a single LaTeX document.")
     parser.add_argument("input_files", nargs='+', help="Paths to the Markdown files to convert")
     parser.add_argument("--output_dir", default="output", help="Directory to save generated LaTeX files")
+    parser.add_argument("--template", help="Path to a custom LaTeX template file")
     args = parser.parse_args()
 
     generated_tex_files = []
     root_metadata = {}
 
-    converter = Converter(output_dir=args.output_dir)
+    converter = Converter(output_dir=args.output_dir, template_path=args.template)
 
     for input_file in args.input_files:
         if not os.path.isfile(input_file):

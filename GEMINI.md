@@ -48,6 +48,13 @@ You can specify an output directory using the `--output_dir` flag. By default, t
 PYTHONPATH=. python src/main.py file1.md file2.md --output_dir my_latex_files
 ```
 
+You can also provide a custom template for the main `.tex` file using the `--template` flag.
+
+```bash
+PYTHONPATH=. python src/main.py file1.md file2.md --template path/to/your/template.tex
+```
+
+
 
 ### 4. Compiling the LaTeX
 

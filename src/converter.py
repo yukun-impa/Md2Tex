@@ -2,9 +2,10 @@ import os
 from src.llm_client import LLMClient
 
 class Converter:
-    def __init__(self, output_dir="output"):
+    def __init__(self, output_dir="output", template_path=None):
         self.client = LLMClient()
         self.output_dir = output_dir
+        self.template_path = template_path
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -77,9 +78,17 @@ class Converter:
         """
         Reads the template and fills in metadata title/author.
         """
-        template_path = os.path.join("templates", "main.tex")
-        with open(template_path, 'r') as f:
-            template = f.read()
+        if self.template_path:
+            template_path = self.template_path
+        else:
+            template_path = os.path.join("templates", "main.tex")
+
+        try:
+            with open(template_path, 'r') as f:
+                template = f.read()
+        except FileNotFoundError:
+            print(f"Error: Template file not found at {template_path}")
+            return None
 
         # Replace placeholders
         title = metadata.get('title', 'Untitled Document')
