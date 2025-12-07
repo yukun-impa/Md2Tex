@@ -14,8 +14,6 @@ This project is a Python-based command-line tool for converting Markdown files i
 
 ### Prerequisites
 
-*   Python 3.6+
-*   pip
 
 ### Installation
 
