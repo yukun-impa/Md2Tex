@@ -10,8 +10,10 @@ This project is a Python-based command-line tool for converting Markdown files i
 *   **Customizable LaTeX Templates**: Allows you to use your own LaTeX templates for the main document, specified via a command-line argument or in the Markdown frontmatter.
 *   **LaTeX Template**: Generates a main `.tex` file that includes the converted content.
 ## TODO List
-     1. use `\include{}` instead of `\input{}`. Each Markdown file should be converted to a chapter document. Try to compile each chapter after calling llm. If compliation fails, capture the error and call LLM again.
-     2. record bad cases to improve system prompt.
+1. use `\include{}` instead of `\input{}`. Each Markdown file should be converted to a chapter document. Try to compile each chapter after calling llm. If compliation fails, capture the error and call LLM again.
+2. Handle images properly. Maybe Human in the loop?
+3. Handle Navigation(jump to) Properly.
+4. record bad cases to improve system prompt.
 
 ## Getting Started
 
