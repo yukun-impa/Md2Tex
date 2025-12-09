@@ -2,82 +2,89 @@
 
 ## Project Overview
 
-This project is a Python-based command-line tool for converting Markdown files into LaTeX documents. It leverages the Gemini Large Language Model (LLM) to perform the conversion from Markdown syntax to LaTeX code.
+This tool automates the conversion of Markdown files into LaTeX using the LLM. It is designed to handle multi-file projects by converting individual Markdown files into LaTeX fragments and stitching them together into a single, compilable PDF.
 
-The tool parses a Markdown file, extracts YAML frontmatter for metadata (like title and author), and then uses the Gemini API to convert the main content of the Markdown file into a `.tex` file. Finally, it generates a root `main.tex` file that includes the converted content and is ready for compilation into a PDF.
+## Architecture
 
-The project is structured into several modules:
-- `src/main.py`: The main entry point for the command-line tool.
-- `src/md_parser.py`: Handles parsing of Markdown files, including YAML frontmatter.
-- `src/converter.py`: Orchestrates the conversion process, including prompting the LLM.
-- `src/llm_client.py`: A client for interacting with the Gemini API.
+- **`src/main.py`**: The CLI entry point. It discovers input files and orchestrates the workflow.
+- **`src/md_parser.py`**: Extracts content from Markdown files.
+- **`src/converter.py`**: Interfaces with Gemini. **Crucially, this module is responsible for stripping Markdown formatting and ensuring output is valid LaTeX body content.**
+- **`src/llm_client.py`**: Manages API authentication and requests.
 
-## Building and Running
+## Setup and Usage
 
 ### 1. Installation
-
-First, conda environment already created. activate conda environment by:
-
+Activate the environment:
 ```bash
 conda activate md2tex
 ```
 
-### 2. Set up API Key
-
-This project uses the Gemini API, which requires an API key. You need to create a `.env` file in the root of the project and add your API key to it:
-
-```
-GEMINI_API_KEY="YOUR_API_KEY"
-```
-
-If you don't provide an API key, the `llm_client.py` module will run in a mock mode, which performs a basic, non-AI-powered conversion.
-
-### 3. Running the Conversion
-
-To convert one or more Markdown files, run the `main.py` script with the paths to your input files.
-
-**Note for local development:** When running the script locally, you need to set the `PYTHONPATH` to the root of the project so that the script can find the `src` module.
+### 2. Conversion
+Run the tool on specific files. This generates individual `.tex` files and updates the root `main.tex`.
 
 ```bash
-PYTHONPATH=. python src/main.py path/to/your/file1.md path/to/your/file2.md
+# Basic usage
+python src/main.py chapter1.md chapter2.md
+
+# Specify output directory
+python src/main.py file.md --output_dir my_tex_output
 ```
 
-You can specify an output directory using the `--output_dir` flag. By default, the output is saved in the `output/` directory.
-
-```bash
-PYTHONPATH=. python src/main.py file1.md file2.md --output_dir my_latex_files
-```
-
-You can also provide a custom template for the main `.tex` file using the `--template` flag.
-
-```bash
-PYTHONPATH=. python src/main.py file1.md file2.md --template path/to/your/template.tex
-```
-
-Alternatively, you can specify the template in the YAML frontmatter of your Markdown file. This will override the `--template` argument.
-
-```yaml
----
-title: My Document
-author: John Doe
-template: path/to/your/template.tex
----
-```
-
-
-
-
-### 4. Compiling the LaTeX
-
-After running the conversion, the `output/` directory will contain the generated `.tex` files. To compile them into a PDF, you can use a LaTeX compiler like `pdflatex`:
+### 3. Compilation
+Compile the generated `main.tex` using your preferred LaTeX engine:
 
 ```bash
 pdflatex -output-directory=output output/main.tex
 ```
 
-## Development Conventions
+Compilation Strategy (Modular Chapter Architecture)
+To support large-scale document generation, this system implements a Root-and-Branch architecture using LaTeX's \include mechanism. This treats every source Markdown file as a distinct, self-contained Chapter.
 
-- **Configuration:** Project configuration, such as the Gemini API key, is managed through environment variables using `python-dotenv`.
-- **Modularity:** The code is organized into distinct modules with clear responsibilities (parsing, conversion, API client).
-- **Templates:** A LaTeX template is used to generate the final `main.tex` file, allowing for easy modification of the document structure.
-- **Error Handling:** The `llm_client.py` includes basic error handling for API calls and a fallback mock mode if the API key is not available.
+1. The "Chapter Module" Constraint
+The system does not merely generate text fragments; it generates Structural Modules.
+
+The Contract: Every generated .tex file must function as a valid target for \include{}.
+Correct Output: Must start with \chapter{...} and contain strictly body content.
+Strict Prohibitions: No Preambles (\documentclass, \usepackage) and no nested includes.
+2. The Main Orchestrator (main.tex)
+The main.tex file acts as the Build Orchestrator. It does not contain content; it contains the sequence of execution.
+
+LATEX
+% main.tex
+\input{preamble}
+\begin{document}
+    \include{output/01_intro}
+    \include{output/02_analysis} 
+\end{document}
+Error Isolation: By using \include, LaTeX generates separate .aux files. If one chapter breaks, it is isolated from the others' internal states.
+3. Observability & Recovery (The Feedback Loop)
+In distributed generation (generating 20+ chapters), failures are inevitable (API timeouts, hallucinated syntax). The system must handle this gracefully.
+
+Atomic Failure Handling:
+The CLI does not crash on a single file failure. Instead, it catches the exception, logs the error, and proceeds to the next file.
+
+The "Build Summary" Standard:
+At the end of execution, the CLI must print a Status Report distinguishing between success and failure.
+
+Design Requirement:
+TEXT
+[SUCCESS] 01_intro.md -> output/01_intro.tex
+[SUCCESS] 02_analysis.md -> output/02_analysis.tex
+[FAILED]  03_conclusion.md (Reason: JSON Decode Error)
+
+--------------------------------------------------
+BUILD COMPLETE WITH ERRORS
+To fix, run: python src/main.py 03_conclusion.md
+--------------------------------------------------
+Incremental Build Capability:
+The system design allows running the tool on a subset of files without destroying the work done on previous files. This allows the user to regenerate only the failed chapters.
+
+4. Dependency Management
+Since individual chapters cannot load packages, dependencies must be declared Globally.
+
+Strategy: Maintain a strict "Standard Library" of packages in your main template (e.g., amsmath, graphicx, listings).
+Prompt Engineering: The System Prompt must explicitly instruct the LLM: "Assume standard packages are already loaded. Do not add \usepackage commands."
+Development Guidelines
+Prompt Engineering: Explicitly forbid Markdown fences and preambles.
+Sanitization: Programmatically strip ```latex fences and \documentclass tags before saving.
+State Management: The tool dynamically generates main.tex based on the files present in the output/ directory, ensuring the build structure is always up to date.
