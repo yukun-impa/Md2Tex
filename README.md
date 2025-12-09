@@ -1,8 +1,4 @@
-Here is a structured, professional `README.md` derived from your `GEMINI.md` notes and our conversation. I have organized it to highlight the "Build System" philosophy and the robust error handling we discussed.
-
-***
-
-# Gemini Markdown to LaTeX Converter
+#  Markdown to LaTeX Converter
 
 A robust, LLM-powered build system that automates the conversion of multi-file Markdown projects into modular, compilable LaTeX documents.
 
