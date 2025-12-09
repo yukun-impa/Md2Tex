@@ -49,13 +49,15 @@ Strict Prohibitions: No Preambles (\documentclass, \usepackage) and no nested in
 2. The Main Orchestrator (main.tex)
 The main.tex file acts as the Build Orchestrator. It does not contain content; it contains the sequence of execution.
 
-LATEX
+```
 % main.tex
 \input{preamble}
 \begin{document}
     \include{output/01_intro}
     \include{output/02_analysis} 
 \end{document}
+```
+
 Error Isolation: By using \include, LaTeX generates separate .aux files. If one chapter breaks, it is isolated from the others' internal states.
 3. Observability & Recovery (The Feedback Loop)
 In distributed generation (generating 20+ chapters), failures are inevitable (API timeouts, hallucinated syntax). The system must handle this gracefully.
@@ -67,15 +69,15 @@ The "Build Summary" Standard:
 At the end of execution, the CLI must print a Status Report distinguishing between success and failure.
 
 Design Requirement:
-TEXT
+```
 [SUCCESS] 01_intro.md -> output/01_intro.tex
 [SUCCESS] 02_analysis.md -> output/02_analysis.tex
 [FAILED]  03_conclusion.md (Reason: JSON Decode Error)
-
 --------------------------------------------------
 BUILD COMPLETE WITH ERRORS
 To fix, run: python src/main.py 03_conclusion.md
 --------------------------------------------------
+```
 Incremental Build Capability:
 The system design allows running the tool on a subset of files without destroying the work done on previous files. This allows the user to regenerate only the failed chapters.
 
