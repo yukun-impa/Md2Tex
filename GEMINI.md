@@ -16,17 +16,10 @@ The project is structured into several modules:
 
 ### 1. Installation
 
-First, create and activate the conda environment:
+First, conda environment already created. activate conda environment by:
 
 ```bash
-conda create -n md2tex python=3.9 -y
 conda activate md2tex
-```
-
-Then, install the necessary Python dependencies from `requirements.txt`:
-
-```bash
-pip install -r requirements.txt
 ```
 
 ### 2. Set up API Key
