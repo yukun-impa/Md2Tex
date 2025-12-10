@@ -6,7 +6,7 @@ This tool automates the conversion of Markdown files into LaTeX using the LLM. I
 
 ## Architecture
 
-- **`src/main.py`**: The CLI entry point. It discovers input files and orchestrates the workflow.
+- **`main.py`**: The CLI entry point. It discovers input files and orchestrates the workflow.
 - **`src/md_parser.py`**: Extracts content from Markdown files.
 - **`src/converter.py`**: Interfaces with Gemini. **Crucially, this module is responsible for stripping Markdown formatting and ensuring output is valid LaTeX body content.**
 - **`src/llm_client.py`**: Manages API authentication and requests.
@@ -24,10 +24,10 @@ Run the tool on specific files. This generates individual `.tex` files and updat
 
 ```bash
 # Basic usage
-python src/main.py chapter1.md chapter2.md
+python main.py chapter1.md chapter2.md
 
 # Specify output directory
-python src/main.py file.md --output_dir my_tex_output
+python main.py file.md --output_dir my_tex_output
 ```
 
 ### 3. Compilation
